@@ -76,7 +76,10 @@ def search_word(
     )
     results: list[dict[str, Any]] = []
 
-    for file_path in list_files(directory, recursive=recursive):
+    target = Path(directory)
+    files = [str(target)] if target.is_file() else list_files(target, recursive=recursive)
+
+    for file_path in files:
         path = Path(file_path)
         try:
             lines = path.read_text(encoding="utf-8").splitlines()

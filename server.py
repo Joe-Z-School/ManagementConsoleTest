@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 # Initialize the Flask application
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend', static_url_path='')
 
 import logging
 log = logging.getLogger('werkzeug')
@@ -32,6 +32,11 @@ def getLogPath(filename):
         raise ValueError("Invalid log filename")
 
     return path
+
+#-- serve the page
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
 
 @app.route('/api/listStories', methods=['POST'])
 def listStories():
