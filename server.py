@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from flask import Flask, request, Response
-import jsonpickle
-from PIL import Image
+from flask import Flask, jsonify, request, Response
 import io
 import argparse
 import base64
+import logParser
+from pathlib import Path
 
 
 # Initialize the Flask application
@@ -15,57 +15,64 @@ import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.DEBUG)
 
+LOG_DIRECTORY = Path("./logs").resolve()
 
-@app.route('/api/listStories', methods=['GET', 'POST'])
+def getLogPath(filename):
+    if not isinstance(filename, str) or not filename.strip():
+        raise ValueError("filename must be a non-empty string")
+
+    # Accept filenames only, not arbitrary paths.
+    if filename != Path(filename).name or filename in (".", ".."):
+        raise ValueError("Only log filenames are allowed")
+
+    path = (LOG_DIRECTORY / filename).resolve()
+
+    # Ensure the resolved path stays inside the log directory.
+    if not path.is_relative_to(LOG_DIRECTORY):
+        raise ValueError("Invalid log filename")
+
+    return path
+
+@app.route('/api/listStories', methods=['POST'])
 def listStories():
-    response = x
-    response_pickled = jsonpickle.encode(response)
-    return Response(
-        response=response_pickled,
-        status=200,
-        mimetype="application/json"
-    )
+    files = logParser.list_files(LOG_DIRECTORY, recursive=True)
+
+    filenames = [Path(file).name for file in files]
+
+    return jsonify({"files": filenames}),200
 
 
 @app.route('/api/countWords', methods=['POST'])
 def countWords():
-    response = x
+    data = request.get_json()
+    path = getLogPath(data.get("filename"))
 
-    response_pickled = jsonpickle.encode(response)
-    return Response(
-        response=response_pickled,
-        status=200,
-        mimetype="application/json"
-    )
+    result = logParser.count_words(path)
+
+    return jsonify({"filename": path.name, "word_count": result}), 200
 
 
 @app.route('/api/wordSearch', methods=['POST'])
 def wordSearch():
-    response = x
-  
-    response_pickled = jsonpickle.encode(response)
-    return Response(
-        response=response_pickled,
-        status=200,
-        mimetype="application/json"
-    )
+    data = request.get_json()
+    path = getLogPath(data.get("filename"))
+    word = data.get("word")
+    recursive = data.get("recursive", False)
+    case_sensitive = data.get("case_sensitive", False)
 
+    result = logParser.search_word(path, word, recursive, case_sensitive)
 
+    return jsonify({"filename": path.name, "matches": result}), 200
 
 
 @app.route('/api/getModifiedDate', methods=['POST'])
 def getModifiedDate():
-    response = 
+    data = request.get_json()
+    path = getLogPath(data.get("filename"))
 
-    # Pickle the response
-    response_pickled = jsonpickle.encode(response)
+    result = logParser.get_modified_date(path)
 
-    # Return the response
-    return Response(
-        response=response_pickled,
-        status=200,
-        mimetype="application/json"
-    )
+    return jsonify({"filename": path.name, "modified_date": result.isoformat()}), 200
 
 
 if __name__ == '__main__':
