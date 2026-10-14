@@ -5,75 +5,65 @@ from __future__ import print_function
 import requests
 import json
 import time
-import base64
-import jsonpickle
 import random
 import argparse
 
 
 def doListStories(addr, debug=False):
 
-    # Headers for http request
-    headers = {'content-type': 'application/json'}
-
-    # Here is where the logic of what to pass to the server resides
-    x = 0
-
     # send http request receive response
     storyUrl = addr + '/api/listStories'
-    response = requests.post(storyUrl, data=x, headers=headers)
+    response = requests.post(storyUrl, json={}, timeout=10)
 
     if debug:
         print("Response is", response)
         print(json.loads(response.text))
 
+    return response.json()
 
-def doCountWords(addr, debug=False):
 
-    headers = {'content-type': 'application/json'}
+def doCountWords(addr, filename, debug=False):
+    countUrl = addr + '/api/countWords'
 
-    # Data to be passed
-    data = 0
-  
-    # send http request with image and receive response
-    countUrl = addr + "/api/countWords"
-    response = requests.post(countUrl, headers=headers)
+    # Filename to be requested count for
+    data = {"filename": filename}
+
+    response = requests.post(countUrl, json=data, timeout=10)
 
     if debug:
         print("Response is", response)
         print(json.loads(response.text))
 
+    return response.json()
 
-def doWordSearch(addr, debug=False):
-    headers = {'content-type': 'application/json'}
+
+def doWordSearch(addr, filename, word, debug=False):
     searchUrl = addr + "/api/wordSearch"
 
     # Data to be passed
-    data = 0
-  
-    response = requests.post(dot_url, data=data, headers=headers)
+    data = {"filename": filename, "word": word}
+
+    response = requests.post(searchUrl, json=data, timeout=10)
+
     if debug:
         print("Response is", response)
         print(json.loads(response.text))
 
+    return response.json()
 
 
-def doGetModifiedDate(addr, debug=False):
-    # Prepare the headers
-    headers = {'content-type': 'application/json'}
 
-    # Data to be passed
-    data = 0
-
-    # send http request with image and receive response
+def doGetModifiedDate(addr, filename, debug=False):
     modifiedUrl = addr + '/api/getModifiedDate'
-    response = requests.post(image_url, data=data, headers=headers)
+
+    data = {"filename": filename}
+    response = requests.post(modifiedUrl, json=data, timeout=10)
 
     if debug:
         print("Response is", response)
         print(json.loads(response.text))
 
-
+    return response.json()
 
 # ---------------------------------------------------------
 # Parse command-line arguments
@@ -117,17 +107,20 @@ print(f"Running server {addr}")
 # Perform requested operation
 # ---------------------------------------------------------
 
+filename = ''
+word = ''
+
 if x == '':
     doListStories(addr, debug=args.debug)
 
 
 elif x == '':
-    doCountWords(addr, debug=args.debug)
+    doCountWords(addr, filename, debug=args.debug)
 
 
 elif x == '':
-    doWordSearch(addr, debug=args.debug)
+    doWordSearch(addr, filename, word, debug=args.debug)
 
 
 elif x == '':
-    doGetModifiedDate(addr, debug=args.debug)
+    doGetModifiedDate(addr, filename, debug=args.debug)
